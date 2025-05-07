@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zinx Gateway Test Page</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            color: #333;
+        }
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .container {
+            background-color: #f9f9f9;
+            border-radius: 5px;
+            padding: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .success {
+            color: #27ae60;
+            font-weight: bold;
+        }
+        .info {
+            margin-top: 20px;
+            background-color: #e7f5fe;
+            padding: 15px;
+            border-left: 4px solid #3498db;
+        }
+    </style>
+</head>
+<body>
+    <h1>Zinx Gateway Test Page</h1>
+    <div class="container">
+        <h2><span class="success">Success!</span> Apache httpd server is running</h2>
+        <p>This is a test page for the Apache httpd server that was added to the Zinx Gateway development environment.</p>
+        <p>If you're seeing this page, it means:</p>
+        <ul>
+            <li>The Apache httpd container is running correctly</li>
+            <li>The volume mapping to the local directory is working</li>
+            <li>You can now configure Zinx Gateway to proxy requests to this service</li>
+        </ul>
+        
+        <div class="info">
+            <p><strong>Next steps:</strong></p>
+            <ol>
+                <li>Access the Zinx Gateway admin interface at <a href="http://localhost:81">http://localhost:81</a></li>
+                <li>Create a proxy host pointing to <code>httpd:80</code> (container name:port)</li>
+                <li>Configure your desired domain and test the proxy functionality</li>
+            </ol>
+        </div>
+    </div>
+</body>
+</html>

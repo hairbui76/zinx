@@ -1,0 +1,262 @@
+<% // Initialize data to avoid any "data is not defined" errors
+var data=typeof data !=='undefined' ? data : { }; %>
+<div class="modal-content">
+    <div class="modal-header">
+        <h5 class="modal-title"><%- i18n('access-lists', 'title') %></h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close"></button>
+    </div>
+    <div class="modal-body">
+        <form class="with-floating-action-buttons">
+
+            <ul class="nav nav-tabs" role="tablist">
+                <li role="presentation" class="nav-item"><a href="#details" aria-controls="tab1" role="tab" data-toggle="tab" class="nav-link active show" aria-selected="true"><i class="fe fe-zap"></i> <%- i18n('access-lists', 'details') %></a></li>
+                <li role="presentation" class="nav-item"><a href="#auth" aria-controls="tab4" role="tab" data-toggle="tab" class="nav-link" aria-selected="false"><i class="fe fe-users"></i> <%- i18n('access-lists', 'authorization') %></a></li>
+                <li role="presentation" class="nav-item"><a href="#access" aria-controls="tab2" role="tab" data-toggle="tab" class="nav-link" aria-selected="false"><i class="fe fe-radio"></i> <%- i18n('access-lists', 'access') %></a></li>
+                <li role="presentation" class="nav-item"><a href="#rbac" aria-controls="tab3" role="tab" data-toggle="tab" class="nav-link" aria-selected="false"><i class="fe fe-shield"></i> Roles (RBAC)</a></li>
+            </ul>
+
+            <div class="tab-content">
+                <!-- Details -->
+                <div class="tab-pane active" id="details">
+                    <div class="row">
+                        <div class="col-sm-12 col-md-12">
+                            <div class="form-group">
+                                <label class="form-label"><%- i18n('access-lists', 'name') %> <span class="form-required">*</span></label>
+                                <input type="text" name="name" class="form-control" placeholder="<%- i18n('access-lists', 'name-placeholder') %>" value="<%- data.name %>" required>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-sm-12 col-md-12">
+                            <div class="form-group">
+                                <label class="custom-control custom-checkbox">
+                                    <input type="checkbox" class="custom-control-input" name="satisfy_any" value="1" <% if (data.satisfy_any) { %>checked="checked"<% } %>>
+                                    <span class="custom-control-label"><%- i18n('access-lists', 'satisfy-any') %></span>
+                                </label>
+                                <div class="help-block"><%- i18n('access-lists', 'help-satisfy') %></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-sm-12 col-md-12">
+                            <div class="form-group">
+                                <label class="custom-control custom-checkbox">
+                                    <input type="checkbox" class="custom-control-input" name="pass_auth" value="1" <% if (data.pass_auth) { %>checked="checked"<% } %>>
+                                    <span class="custom-control-label"><%- i18n('access-lists', 'pass-auth') %></span>
+                                </label>
+                                <div class="help-block"><%- i18n('access-lists', 'help-pass-auth') %></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Authorization (Authentication) -->
+                <div class="tab-pane" id="auth">
+                    <!-- Authentication provider tabs -->
+                    <ul class="nav nav-tabs" role="tablist">
+                        <li role="presentation" class="nav-item"><a href="#basic_auth" aria-controls="basic_auth" role="tab" data-toggle="tab" class="nav-link active show"><i class="fe fe-lock"></i> Basic Auth</a></li>
+                        <li role="presentation" class="nav-item"><a href="#keycloak_auth" aria-controls="keycloak_auth" role="tab" data-toggle="tab" class="nav-link"><i class="fe fe-shield"></i> Keycloak</a></li>
+                        <li role="presentation" class="nav-item"><a href="#authelia_auth" aria-controls="authelia_auth" role="tab" data-toggle="tab" class="nav-link"><i class="fe fe-shield"></i> Authelia</a></li>
+                    </ul>
+
+                    <div class="tab-content">
+                        <!-- Basic Authentication Tab -->
+                        <div class="tab-pane active" id="basic_auth">
+                            <div class="row mt-3">
+                                <div class="col-sm-6 col-md-4">
+                                    <div class="form-group">
+                                        <label class="form-label">Username <span class="form-required">*</span></label>
+                                        <input type="text" name="username[]" class="form-control" placeholder="admin">
+                                    </div>
+                                </div>
+                                <div class="col-sm-6 col-md-8">
+                                    <div class="form-group">
+                                        <label class="form-label">Password <span class="form-required">*</span></label>
+                                        <input type="password" name="password[]" class="form-control" placeholder="Password">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="items"><!-- items --></div>
+                            <div class="btn-list justify-content-end">
+                                <button type="button" class="btn btn-teal auth_add" data-auth-type="basic">Add Basic Auth</button>
+                            </div>
+                        </div>
+
+                        <!-- Keycloak Authentication Tab -->
+                        <div class="tab-pane" id="keycloak_auth">
+                            <div class="row mt-3">
+                                <div class="col-sm-12 col-md-12">
+                                    <p class="text-muted">Configure Keycloak OAuth2/OIDC authentication for this access list.</p>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-sm-12 col-md-12">
+                                    <div class="form-group">
+                                        <label class="form-label">Keycloak Server URL <span class="form-required">*</span></label>
+                                        <input type="url" name="keycloak_provider_url" class="form-control" placeholder="https://keycloak.example.com/auth" value="<%- data.keycloak_provider_url || '' %>" data-required="true">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-sm-12 col-md-4">
+                                    <div class="form-group">
+                                        <label class="form-label">Realm <span class="form-required">*</span></label>
+                                        <input type="text" name="keycloak_realm" class="form-control" placeholder="master" value="<%- data.keycloak_realm || '' %>">
+                                    </div>
+                                </div>
+                                <div class="col-sm-6 col-md-4">
+                                    <div class="form-group">
+                                        <label class="form-label">Client ID <span class="form-required">*</span></label>
+                                        <input type="text" name="keycloak_client_id" class="form-control" placeholder="nginx-proxy" value="<%- data.keycloak_client_id || '' %>">
+                                    </div>
+                                </div>
+                                <div class="col-sm-6 col-md-4">
+                                    <div class="form-group">
+                                        <label class="form-label">Client Secret <span class="form-required">*</span></label>
+                                        <input type="password" name="keycloak_client_secret" class="form-control" placeholder="Secret" value="<%- data.keycloak_client_secret || '' %>">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-sm-12">
+                                    <div class="form-group">
+                                        <label class="custom-control custom-checkbox">
+                                            <input type="checkbox" class="custom-control-input" name="keycloak_enable_mfa" value="1" <% if (data.keycloak_enable_mfa) { %>checked="checked"<% } %>>
+                                            <span class="custom-control-label">Enable Multi-Factor Authentication (MFA)</span>
+                                        </label>
+                                        <label class="custom-control custom-checkbox">
+                                            <input type="checkbox" class="custom-control-input" name="keycloak_enable_otp" value="1" <% if (data.keycloak_enable_otp) { %>checked="checked"<% } %>>
+                                            <span class="custom-control-label">Enable One-Time Password (OTP)</span>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="btn-list justify-content-end">
+                                <button type="button" class="btn btn-teal auth_add" data-auth-type="keycloak">Add Keycloak Configuration</button>
+                            </div>
+                        </div>
+
+                        <!-- Authelia Authentication Tab -->
+                        <div class="tab-pane" id="authelia_auth">
+                            <div class="row mt-3">
+                                <div class="col-sm-12 col-md-12">
+                                    <p class="text-muted">Configure Authelia authentication for this access list.</p>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-sm-12 col-md-12">
+                                    <div class="form-group">
+                                        <label class="form-label">Authelia Server URL <span class="form-required">*</span></label>
+                                        <input type="url" name="authelia_provider_url" class="form-control" placeholder="https://authelia.example.com" value="<%- data.authelia_provider_url || '' %>" data-required="true">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-sm-6 col-md-6">
+                                    <div class="form-group">
+                                        <label class="form-label">Client ID <span class="form-required">*</span></label>
+                                        <input type="text" name="authelia_client_id" class="form-control" placeholder="nginx-proxy" value="<%- data.authelia_client_id || '' %>">
+                                    </div>
+                                </div>
+                                <div class="col-sm-6 col-md-6">
+                                    <div class="form-group">
+                                        <label class="form-label">Client Secret <span class="form-required">*</span></label>
+                                        <input type="password" name="authelia_client_secret" class="form-control" placeholder="Secret" value="<%- data.authelia_client_secret || '' %>">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-sm-12">
+                                    <div class="form-group">
+                                        <label class="custom-control custom-checkbox">
+                                            <input type="checkbox" class="custom-control-input" name="authelia_enable_mfa" value="1" <% if (data.authelia_enable_mfa) { %>checked="checked"<% } %>>
+                                            <span class="custom-control-label">Enable Multi-Factor Authentication (MFA)</span>
+                                        </label>
+                                        <label class="custom-control custom-checkbox">
+                                            <input type="checkbox" class="custom-control-input" name="authelia_enable_otp" value="1" <% if (data.authelia_enable_otp) { %>checked="checked"<% } %>>
+                                            <span class="custom-control-label">Enable One-Time Password (OTP)</span>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="btn-list justify-content-end">
+                                <button type="button" class="btn btn-teal auth_add" data-auth-type="authelia">Add Authelia Configuration</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Network Access -->
+                <div class="tab-pane" id="access">
+                    <div class="row">
+                        <div class="col-sm-6 col-md-6">
+                            <div class="form-group">
+                                <label class="form-label"><%- i18n('access-lists', 'address') %> <span class="form-required">*</span></label>
+                                <input type="text" name="address[]" class="form-control" placeholder="<%- i18n('access-lists', 'address-placeholder') %>" data-required="true">
+                            </div>
+                        </div>
+                        <div class="col-sm-6 col-md-6">
+                            <div class="form-group">
+                                <label class="form-label"><%- i18n('access-lists', 'directive') %> <span class="form-required">*</span></label>
+                                <select name="directive[]" class="form-control custom-select" required>
+                                    <option value="allow"><%- i18n('access-lists', 'allow') %></option>
+                                    <option value="deny"><%- i18n('access-lists', 'deny') %></option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="clients"><!-- clients --></div>
+                    <div class="btn-list justify-content-end">
+                        <button type="button" class="btn btn-teal access_add"><%- i18n('access-lists', 'add-access') %></button>
+                    </div>
+                </div>
+
+                <!-- Role-Based Access Control (RBAC) -->
+                <div class="tab-pane" id="rbac">
+                    <p>Role-Based Access Control allows you to restrict access based on user roles. This works with Keycloak and Authelia authentication providers.</p>
+
+                    <div class="row">
+                        <div class="col-sm-12 col-md-12">
+                            <div class="form-group">
+                                <label class="form-label">Role Name <span class="form-required">*</span></label>
+                                <input type="text" name="role_name" class="form-control" placeholder="admin">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-sm-12">
+                            <div class="form-group">
+                                <label class="form-label">Permissions</label>
+                                <div class="custom-controls-stacked">
+                                    <label class="custom-control custom-checkbox">
+                                        <input type="checkbox" class="custom-control-input" name="perm_view" value="1">
+                                        <span class="custom-control-label">View Content</span>
+                                    </label>
+                                    <label class="custom-control custom-checkbox">
+                                        <input type="checkbox" class="custom-control-input" name="perm_edit" value="1">
+                                        <span class="custom-control-label">Edit Content</span>
+                                    </label>
+                                    <label class="custom-control custom-checkbox">
+                                        <input type="checkbox" class="custom-control-input" name="perm_admin" value="1">
+                                        <span class="custom-control-label">Admin Access</span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="roles"><!-- roles --></div>
+                    <div class="btn-list justify-content-end">
+                        <button type="button" class="btn btn-teal role_add">Add Role</button>
+                    </div>
+                </div>
+
+            </div>
+        </form>
+    </div>
+    <div class="modal-footer">
+        <button type="button" class="btn btn-secondary cancel" data-dismiss="modal"><%- i18n('str', 'cancel') %></button>
+        <button type="button" class="btn btn-teal save"><%- i18n('str', 'save') %></button>
+    </div>
+</div>

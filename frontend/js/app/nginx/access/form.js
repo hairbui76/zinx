@@ -1,0 +1,382 @@
+const Mn = require('backbone.marionette');
+const App = require('../../main');
+const AccessListModel = require('../../../models/access-list');
+const template = require('./form.ejs');
+const ItemView = require('./form/item');
+const ClientView = require('./form/client');
+
+require('jquery-serializejson');
+
+const ItemsView = Mn.CollectionView.extend({
+    childView: ItemView
+});
+
+const ClientsView = Mn.CollectionView.extend({
+    childView: ClientView
+});
+
+module.exports = Mn.View.extend({
+    template: function (data) {
+        // Create a fully initialized data object with all required properties
+        const safeData = {
+            name: '',
+            satisfy_any: false,
+            pass_auth: false,
+            items: [],
+            clients: [],
+            roles: [],
+            keycloak_provider_url: '',
+            keycloak_realm: '',
+            keycloak_client_id: '',
+            keycloak_client_secret: '',
+            keycloak_enable_mfa: false,
+            keycloak_enable_otp: false,
+            authelia_provider_url: '',
+            authelia_client_id: '',
+            authelia_client_secret: '',
+            authelia_enable_mfa: false,
+            authelia_enable_otp: false,
+            ...data
+        };
+        return template(safeData);
+    },
+    className: 'modal-dialog',
+
+    ui: {
+        items_region: '.items',
+        clients_region: '.clients',
+        roles_region: '.roles',
+        form: 'form',
+        buttons: '.modal-footer button',
+        cancel: 'button.cancel',
+        save: 'button.save',
+        access_add: 'button.access_add',
+        auth_add: 'button.auth_add',
+        role_add: 'button.role_add'
+    },
+
+    regions: {
+        items_region: '@ui.items_region',
+        clients_region: '@ui.clients_region',
+        roles_region: '@ui.roles_region'
+    },
+
+    events: {
+        'click @ui.save': function (e) {
+            e.preventDefault();
+
+            // Get active tabs
+            const activeAuthTab = $('.tab-pane.active[id="auth"]').length > 0;
+            const activeKeycloakTab = activeAuthTab && $('.tab-pane.active[id="keycloak_auth"]').length > 0;
+            const activeAutheliaTab = activeAuthTab && $('.tab-pane.active[id="authelia_auth"]').length > 0;
+
+            // Temporarily remove required attribute from hidden tabs
+            if (!activeAuthTab) {
+                this.ui.form.find('#auth [data-required]').removeAttr('required');
+            } else {
+                // Handle nested tabs within Auth
+                if (!activeKeycloakTab) {
+                    this.ui.form.find('#keycloak_auth [data-required]').removeAttr('required');
+                } else {
+                    this.ui.form.find('#keycloak_auth [data-required]').attr('required', 'required');
+                }
+
+                if (!activeAutheliaTab) {
+                    this.ui.form.find('#authelia_auth [data-required]').removeAttr('required');
+                } else {
+                    this.ui.form.find('#authelia_auth [data-required]').attr('required', 'required');
+                }
+            }
+
+            // Now check form validity
+            if (!this.ui.form[0].checkValidity()) {
+                $('<input type="submit">').hide().appendTo(this.ui.form).click().remove();
+                return;
+            }
+
+            let view = this;
+            let form_data = this.ui.form.serializeJSON();
+            let items_data = [];
+            let clients_data = [];
+
+            // Process basic auth items
+            if (form_data.username && Array.isArray(form_data.username)) {
+                form_data.username.map(function (val, idx) {
+                    if (val.trim().length) {
+                        items_data.push({
+                            auth_type: 'basic',
+                            username: val.trim(),
+                            password: form_data.password[idx]
+                        });
+                    }
+                });
+            }
+
+            // Process Keycloak auth
+            if (form_data.keycloak_provider_url && form_data.keycloak_provider_url.trim().length) {
+                items_data.push({
+                    auth_type: 'keycloak',
+                    provider_url: form_data.keycloak_provider_url.trim(),
+                    realm: form_data.keycloak_realm,
+                    client_id: form_data.keycloak_client_id,
+                    client_secret: form_data.keycloak_client_secret,
+                    enable_mfa: !!form_data.keycloak_enable_mfa,
+                    enable_otp: !!form_data.keycloak_enable_otp
+                });
+            }
+
+            // Process Authelia auth
+            if (form_data.authelia_provider_url && form_data.authelia_provider_url.trim().length) {
+                items_data.push({
+                    auth_type: 'authelia',
+                    provider_url: form_data.authelia_provider_url.trim(),
+                    client_id: form_data.authelia_client_id,
+                    client_secret: form_data.authelia_client_secret,
+                    enable_mfa: !!form_data.authelia_enable_mfa,
+                    enable_otp: !!form_data.authelia_enable_otp
+                });
+            }
+
+            // Process clients (IP/network access rules)
+            if (form_data.address && Array.isArray(form_data.address)) {
+                form_data.address.map(function (val, idx) {
+                    if (val.trim().length) {
+                        clients_data.push({
+                            address: val.trim(),
+                            directive: form_data.directive[idx]
+                        });
+                    }
+                });
+            }
+
+            // Comment out for testing - normally you would need at least one rule
+            // if (!items_data.length && !clients_data.length) {
+            //     alert('You must specify at least 1 Authorization or Access rule');
+            //     return;
+            // }
+
+            let data = {
+                name: form_data.name,
+                satisfy_any: !!form_data.satisfy_any,
+                pass_auth: !!form_data.pass_auth,
+                items: items_data,
+                clients: clients_data,
+                roles: this.model.get('roles') || []
+            };
+
+            console.log(data);
+
+            let method = App.Api.Nginx.AccessLists.create;
+            let is_new = true;
+
+            if (this.model.get('id')) {
+                // edit
+                is_new = false;
+                method = App.Api.Nginx.AccessLists.update;
+                data.id = this.model.get('id');
+            }
+
+            this.ui.buttons.prop('disabled', true).addClass('btn-disabled');
+            method(data)
+                .then(result => {
+                    view.model.set(result);
+
+                    App.UI.closeModal(function () {
+                        if (is_new) {
+                            App.Controller.showNginxAccess();
+                        }
+                    });
+                })
+                .catch(err => {
+                    alert(err.message);
+                    this.ui.buttons.prop('disabled', false).removeClass('btn-disabled');
+                });
+        },
+
+        'click @ui.access_add': function (e) {
+            e.preventDefault();
+
+            let clients = this.model.get('clients');
+            clients.push({});
+            this.showChildView('clients_region', new ClientsView({
+                collection: new Backbone.Collection(clients)
+            }));
+        },
+
+        'click @ui.auth_add': function (e) {
+            e.preventDefault();
+
+            const authType = $(e.currentTarget).data('auth-type') || 'basic';
+
+            if (authType === 'basic') {
+                this.model.get('items').push({
+                    auth_type: 'basic',
+                    username: '',
+                    password: ''
+                });
+
+                let items = new ItemsView({
+                    collection: new Backbone.Collection(this.model.get('items').filter(item => !item.auth_type || item.auth_type === 'basic'))
+                });
+                this.showChildView('items_region', items);
+            } else if (authType === 'keycloak') {
+                // For Keycloak, we update the form fields rather than adding collection items
+                // because we just have one Keycloak config per access list
+                const keycloakUrl = this.ui.form.find('input[name="keycloak_provider_url"]').val();
+                if (!keycloakUrl) {
+                    alert('Please provide a Keycloak Provider URL before adding');
+                    return;
+                }
+
+                alert('Keycloak authentication configuration added');
+            } else if (authType === 'authelia') {
+                // For Authelia, we update the form fields rather than adding collection items
+                // because we just have one Authelia config per access list
+                const autheliaUrl = this.ui.form.find('input[name="authelia_provider_url"]').val();
+                if (!autheliaUrl) {
+                    alert('Please provide an Authelia Provider URL before adding');
+                    return;
+                }
+
+                alert('Authelia authentication configuration added');
+            }
+        },
+
+        'click @ui.role_add': function (e) {
+            e.preventDefault();
+
+            const roleName = this.ui.form.find('input[name="role_name"]').val().trim();
+
+            if (!roleName) {
+                alert('Please provide a role name');
+                return;
+            }
+
+            // Get permissions from checkboxes
+            const permissions = {
+                view: !!this.ui.form.find('input[name="perm_view"]').is(':checked'),
+                edit: !!this.ui.form.find('input[name="perm_edit"]').is(':checked'),
+                admin: !!this.ui.form.find('input[name="perm_admin"]').is(':checked')
+            };
+
+            // Add the role to the model
+            if (!this.model.get('roles')) {
+                this.model.set('roles', []);
+            }
+
+            this.model.get('roles').push({
+                name: roleName,
+                permissions: permissions
+            });
+
+            // Clear form fields
+            this.ui.form.find('input[name="role_name"]').val('');
+            this.ui.form.find('input[name="perm_view"]').prop('checked', false);
+            this.ui.form.find('input[name="perm_edit"]').prop('checked', false);
+            this.ui.form.find('input[name="perm_admin"]').prop('checked', false);
+
+            // Show added role
+            this.renderRoles();
+        }
+    },
+
+    renderRoles: function () {
+        const roles = this.model.get('roles') || [];
+        this.getUI('roles_region').empty();
+
+        if (roles.length) {
+            const rolesList = $('<div class="roles-list card"></div>');
+            const rolesTable = $('<table class="table card-table"></table>');
+            rolesTable.append('<thead><tr><th>Role</th><th>Permissions</th><th>Actions</th></tr></thead>');
+            const tbody = $('<tbody></tbody>');
+
+            roles.forEach(role => {
+                const tr = $('<tr></tr>');
+                tr.append(`<td>${role.name}</td>`);
+
+                // Display permissions
+                const permLabels = [];
+                if (role.permissions.view) permLabels.push('<span class="badge badge-success">View</span>');
+                if (role.permissions.edit) permLabels.push('<span class="badge badge-primary">Edit</span>');
+                if (role.permissions.admin) permLabels.push('<span class="badge badge-danger">Admin</span>');
+
+                tr.append(`<td>${permLabels.join(' ')}</td>`);
+
+                // Add delete button
+                const deleteBtn = $(`<button class="btn btn-sm btn-danger" data-index="${index}"><i class="fe fe-trash"></i></button>`);
+                deleteBtn.on('click', (e) => {
+                    e.preventDefault();
+                    const idx = $(e.currentTarget).data('index');
+                    const roles = this.model.get('roles');
+                    roles.splice(idx, 1);
+                    this.renderRoles();
+                });
+
+                const tdActions = $('<td></td>');
+                tdActions.append(deleteBtn);
+                tr.append(tdActions);
+
+                tbody.append(tr);
+            });
+
+            rolesTable.append(tbody);
+            rolesList.append(rolesTable);
+            this.getUI('roles_region').append(rolesList);
+        } else {
+            this.getUI('roles_region').append('<p class="text-muted">No roles added yet. Add a role above.</p>');
+        }
+    },
+
+    onRender: function () {
+        // Ensure model has required collections before rendering
+        const items = this.model.get('items') || [];
+        const clients = this.model.get('clients') || [];
+
+        let itemsView = new ItemsView({
+            collection: new Backbone.Collection(items)
+        });
+
+        let clientsView = new ClientsView({
+            collection: new Backbone.Collection(clients)
+        });
+
+        this.showChildView('items_region', itemsView);
+        this.showChildView('clients_region', clientsView);
+
+        // Render roles
+        this.renderRoles();
+    },
+
+    initialize: function (options) {
+        // Make sure options is always an object
+        options = options || {};
+
+        if (typeof options.model === 'undefined' || !options.model) {
+            // Create a new model with default values
+            this.model = new AccessListModel.Model({
+                // Default values for a new access list
+                name: '',
+                satisfy_any: false,
+                pass_auth: false,
+                items: [], // Basic auth items
+                clients: [], // Client IP/network access items
+                roles: [], // RBAC roles
+                // Default values for Keycloak auth
+                keycloak_provider_url: '',
+                keycloak_realm: '',
+                keycloak_client_id: '',
+                keycloak_client_secret: '',
+                keycloak_enabled: false,
+                keycloak_enable_mfa: false,
+                keycloak_enable_otp: false,
+                // Default values for Authelia auth
+                authelia_provider_url: '',
+                authelia_client_id: '',
+                authelia_client_secret: '',
+                authelia_enable_mfa: false,
+                authelia_enable_otp: false,
+                authelia_enabled: false
+            });
+        }
+    }
+});

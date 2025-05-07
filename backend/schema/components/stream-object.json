@@ -1,0 +1,61 @@
+{
+	"type": "object",
+	"description": "Stream object",
+	"required": ["id", "created_on", "modified_on", "owner_user_id", "incoming_port", "forwarding_host", "forwarding_port", "tcp_forwarding", "udp_forwarding", "enabled", "meta"],
+	"additionalProperties": false,
+	"properties": {
+		"id": {
+			"$ref": "../common.json#/properties/id"
+		},
+		"created_on": {
+			"$ref": "../common.json#/properties/created_on"
+		},
+		"modified_on": {
+			"$ref": "../common.json#/properties/modified_on"
+		},
+		"owner_user_id": {
+			"$ref": "../common.json#/properties/user_id"
+		},
+		"incoming_port": {
+			"type": "string",
+			"pattern": "^([0-9]{1,5}$|[0-9]{1,5}-[0-9]{1,5}$)",
+			"maxLength": 11
+		},
+		"forwarding_host": {
+			"type": "string"
+		},
+		"forwarding_port": {
+			"type": "string",
+			"pattern": "^([0-9]{1,5}|\\$server_port)$",
+			"maxLength": 12
+		},
+		"tcp_forwarding": {
+			"type": "boolean"
+		},
+		"udp_forwarding": {
+			"type": "boolean"
+		},
+		"enabled": {
+			"$ref": "../common.json#/properties/enabled"
+		},
+		"certificate_id": {
+			"$ref": "../common.json#/properties/certificate_id"
+		},
+		"meta": {
+			"type": "object"
+		},
+		"owner": {
+			"$ref": "./user-object.json"
+		},
+		"certificate": {
+			"oneOf": [
+				{
+					"type": "null"
+				},
+				{
+					"$ref": "./certificate-object.json"
+				}
+			]
+		}
+	}
+}

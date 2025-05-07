@@ -1,0 +1,62 @@
+services:
+  zinx-gateway:
+    container_name: zinx-gateway-dev
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: always
+    network_mode: host
+    volumes:
+      - "./data:/data"
+    environment:
+      - NODE_ENV=development
+      - TZ=Asia/Ho_Chi_Minh
+      - DISABLE_IPV6=true
+      # Using SQLite instead of MySQL for development
+      - INITIAL_ADMIN_EMAIL=admin@example.test
+      - INITIAL_ADMIN_PASSWORD=admin
+
+  # Optional Keycloak for testing the new authentication features
+  keycloak:
+    image: quay.io/keycloak/keycloak:latest
+    container_name: zinx-gateway-keycloak-dev
+    restart: always
+    network_mode: host
+    environment:
+      - KEYCLOAK_ADMIN=admin
+      - KEYCLOAK_ADMIN_PASSWORD=admin
+      # Using H2 database for development
+      - KC_DB=dev-file
+      - KC_HTTP_PORT=8081
+    command: start-dev
+
+  # Optional Authelia for testing the new authentication features
+  authelia:
+    image: authelia/authelia:latest
+    container_name: zinx-gateway-authelia-dev
+    restart: always
+    network_mode: host
+    volumes:
+      - "./authelia:/config"
+    environment:
+      - AUTHELIA_JWT_SECRET=development_secret_key_for_testing_only
+      - AUTHELIA_SESSION_SECRET=development_secret_key_for_testing_only
+      - AUTHELIA_AUTHENTICATION_BACKEND_PASSWORD_RESET_DISABLE=true
+      - AUTHELIA_NOTIFIER_DISABLE=true
+      - AUTHELIA_SESSION_DOMAIN=localhost
+      - AUTHELIA_TOTP_ISSUER=zinx-gateway-dev
+      # Using file-based storage for development
+      - AUTHELIA_STORAGE_LOCAL_PATH=/config/db.sqlite3
+
+  # Example Apache httpd service for testing nginx proxy
+  httpd:
+    image: httpd
+    container_name: zinx-gateway-httpd-test
+    restart: always
+    network_mode: host
+    volumes:
+      - "./httpd-test/htdocs:/usr/local/apache2/htdocs/"
+      # Add custom httpd.conf to change default port from 80 to 8080
+      - "./httpd-test/conf/httpd.conf:/usr/local/apache2/conf/httpd.conf"
+    environment:
+      - TZ=Asia/Ho_Chi_Minh
