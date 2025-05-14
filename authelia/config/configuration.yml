@@ -1,0 +1,164 @@
+server:
+  address: tcp://0.0.0.0:9091
+  tls:
+    key: /config/private.pem
+    certificate: /config/public.crt
+  buffers:
+    read: 16384
+    write: 16384
+
+log:
+  level: info
+  format: text
+  file_path: /config/authelia.log
+
+authentication_backend:
+  file:
+    path: /config/users_database.yml
+
+identity_validation:
+  reset_password:
+    jwt_secret: supersecretkey
+    jwt_lifespan: "5 minutes"
+    jwt_algorithm: "HS256"
+
+session:
+  name: authelia_session
+  secret: supersecretkey
+  expiration: 36000
+  inactivity: 30000
+  cookies:
+    - domain: 127.0.0.1
+      authelia_url: "https://127.0.0.1:9091"
+      same_site: "none"
+      inactivity: "1d"
+      expiration: "1d"
+      remember_me: "1d"
+    - domain: 100.79.76.106
+      authelia_url: "https://100.79.76.106:9091"
+      same_site: "none"
+      inactivity: "1d"
+      expiration: "1d"
+      remember_me: "1d"
+
+storage:
+  encryption_key: UMArkNjQPpuJOnnrKtCa
+  postgres:
+    host: 127.0.0.1
+    port: 5432
+    database: authelia
+    username: authelia
+    password: autheliapassword
+    sslmode: disable
+
+access_control:
+  default_policy: deny
+  rules:
+    - domain: "127.0.0.1"
+      policy: one_factor
+    - domain: "100.79.76.106"
+      policy: one_factor
+
+# duo_api:
+#   disable: true
+# totp:
+#   disable: true
+# webauthn:
+#   disable: true
+
+identity_providers:
+  oidc:
+    hmac_secret: supersecretkey
+    enable_client_debug_messages: true
+    lifespans:
+      access_token: "1d"
+      authorize_code: "1d"
+      id_token: "1d"
+      refresh_token: "1d"
+    # authorization_policies:
+    #   policy_name:
+    #     default_policy: deny
+    #     rules:
+    #       - policy: one_factor
+    #         networks:
+    #           - 0.0.0.0/0
+    #           - 127.0.0.1
+    jwks:
+      - key_id: "example"
+        algorithm: "RS256"
+        use: "sig"
+        key: |
+          -----BEGIN PRIVATE KEY-----
+          MIIEvAIBADANBgkqhkiG9w0BAQEFAASCBKYwggSiAgEAAoIBAQChbvlbqtDYPzrd
+          NbUC6cER47dDAwMjBkX/JY78NwY6yjge3YSKmiPYUU+1yvI5W3Dn7RoU4n2mis38
+          HcxVZA2ZZCh97Tl4xZkF3yjkiouxXQh5D+kBMW/4orZgwaDKWzLnwQVoR9hM64XO
+          RhTrI+5D0DkaDri/OF2STsB8GHKhadXrEZb9RQLBPxqD/9zy9ISWYwl1GKIa144e
+          9oJJtC2j1//baPO49r7hibl5IAFLdttVxc1S/ej/HVgTvCaK6tHYPPuLQ6teA8xa
+          SveyVqdM8eVeTH1Z3BGYOH827GDZS1UdcqFBEDhaTbirdrYTkjqRNJpVQkGz6AAM
+          j/d/jxRjAgMBAAECggEAA3SB7G8A0/Vb0oA5GjwxNat6Bfp6hrVg/3pTpRzzCoRp
+          eb+j++jF+6CXOXzZJ6vIBC6+8CjTfPew5kR9AGwzyPoBI9t/72XLRfo7ayjL9JqD
+          zpODQ9NFt5HuoAOE6CUrjGpFLgYw9Z8qLfqyApZc8yFHF5euZz6oQgliypp7WZkG
+          6eBBQFqq3QQC2Ddo783gLYstIsWP4R3yG2epPgtKlTq1C7mLxiJ6M1Qia4Cr1ytd
+          d7nh/1STqKez/3g1kksO0vVdUdteWyoOFxPWeI1pAslQLlFWu/UQ0pgaVtxc5B3y
+          zpcRgy2Hk36pCNJ64UUkQlxCGj8TBAfKQTwj4AHIgQKBgQDVvgddxLAm9Yr7qWCJ
+          fcyvGCoDy9HnJ0QMNhvaDMKVaDpRBrOv13Rn9WYDKls65haFcODOcogQdCKVn+4a
+          cMCCVeMQOQRKfmQNedzg6D2llvpmLwVU5lMZ6p5GEaUPjPiww+KQwHRtZWBykkHF
+          k4DAJdo/mbjMTv4BADpyPCUE7wKBgQDBWXsNTr2j4kv+coul2h4ad0iYCxh/VFaR
+          uVKCNU13CvRitNfpahogU59BkV4z7kggxGeZ6P6MJpgV0+OD28D7L9KRbOPXaE82
+          ZW6JVY6ANwCwaG4lDR900e93oZ819K/L6r3LeAXgLypB0Axa41l5DNcbP7PQU14k
+          Vh4UFKHvzQKBgCXOXu8vAxlhBRxOcUzge3vdAlF5k78XKuoeB/8hkqlqriX20YGg
+          0m4w8cJNk6VvXTxtItZhW7/NSvC8QRlcKDDlkCwmaaPjhz769x6w9XZ8pf29A2xo
+          8Pn8jdJG/LMrdDGP9Fs2L2HKNK0PQaL43CUgjOIDBrTcpAD5UV0zVjjxAoGAIdkZ
+          WqYLOvJ13VCOM/WwSW/SbJOcsUXBdfdcg2Dzc8CeMd144urpMfmRqrfZJvwy8lGP
+          1XjdfwmOnFugu8evzAl+Mmk+pcoj++Db7fzlWnrGixttFN1sQVYzNt07cwWn9One
+          Wg1j8fAv1J+oWgzs7+0YhzOqtfCyTWgqEdfe1Y0CgYApR//qUxGXA/pHrIpTm6YS
+          PYGbDWqZBsAJ53izRkExzyxoUUQHDlvffDVUnMvLzTWGWpfZraDB9mF8RL1sx+Q8
+          N/kl81frs8eTPFLFmXRFQSrT5rVScXOvql3B5n+e+kG8Hbvg05nUzXC43SwrScIE
+          sp1Kyt3Rv6d7blrUgT7VxQ==
+          -----END PRIVATE KEY-----
+
+        certificate_chain: |
+          -----BEGIN CERTIFICATE-----
+          MIIDEjCCAfqgAwIBAgIRAOPYotpE3JzEIUEwRa8sFWUwDQYJKoZIhvcNAQELBQAw
+          KTERMA8GA1UEChMIQXV0aGVsaWExFDASBgNVBAMTC2V4YW1wbGUuY29tMB4XDTI1
+          MDQyOTAzMjczMVoXDTI2MDQyOTAzMjczMVowKTERMA8GA1UEChMIQXV0aGVsaWEx
+          FDASBgNVBAMTC2V4YW1wbGUuY29tMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIB
+          CgKCAQEAoW75W6rQ2D863TW1AunBEeO3QwMDIwZF/yWO/DcGOso4Ht2Eipoj2FFP
+          tcryOVtw5+0aFOJ9porN/B3MVWQNmWQofe05eMWZBd8o5IqLsV0IeQ/pATFv+KK2
+          YMGgylsy58EFaEfYTOuFzkYU6yPuQ9A5Gg64vzhdkk7AfBhyoWnV6xGW/UUCwT8a
+          g//c8vSElmMJdRiiGteOHvaCSbQto9f/22jzuPa+4Ym5eSABS3bbVcXNUv3o/x1Y
+          E7wmiurR2Dz7i0OrXgPMWkr3slanTPHlXkx9WdwRmDh/Nuxg2UtVHXKhQRA4Wk24
+          q3a2E5I6kTSaVUJBs+gADI/3f48UYwIDAQABozUwMzAOBgNVHQ8BAf8EBAMCBaAw
+          EwYDVR0lBAwwCgYIKwYBBQUHAwEwDAYDVR0TAQH/BAIwADANBgkqhkiG9w0BAQsF
+          AAOCAQEAAras9+pfDJwrkvxsROg1w7/3rmOuuD2/I7kkqeMC23GXrPtBBMoUdK2U
+          pGza/12vCeleOv/Xzz3fjM4oJGSruaE/nIvXskGrFxjdXRk6bNVh5UNPoVOKrC7D
+          Myx6hgFKlRIYabPLmRzMkO/nuFAHFpI29Z3CW5inX7VViAFLgYH0RT8/PhZahaY9
+          BAGaX5qvhXnaSmhraykhqrzYvQHWutXcWtaQpEbH+49Y8hGADmMa7l3Bq0VFOaly
+          2h4tA4MA+/aQiNlynYzaXEHTygga8QxlPM2+NgUTelFdr3rDvo/u3hNRaLxaV9Kj
+          vQLLtHpthzxoWxAXeo0X6TQZ7WRqUA==
+          -----END CERTIFICATE-----
+
+    clients:
+      - client_id: "qjdp_LS1v-1nEGKEhae~mcjjpfHaYij7s~lr9svWK7nRyBSPN-RowuJ6IolzlZ0Nmxu_1QRw"
+        client_secret: "$pbkdf2-sha512$310000$GggdZoDT0i0wbLOLsMn1aw$IyFttoHHPFxw1C9qI2q.p2kcnbFqk4DsQTDAjPy02zDqlzWcVwy7vXhHpobubyRWlAOQqfEX/cBbCJ1GaiJ0Aw"
+        # authorization_policy: one_factor
+        # token_endpoint_auth_method: client_secret_basic
+        redirect_uris:
+          - https://127.0.0.1:82/cb
+          - https://100.79.76.106:82/cb
+        scopes:
+          - openid
+          - profile
+          - email
+          - offline
+        grant_types:
+          - refresh_token
+          - authorization_code
+        response_types:
+          - "code id_token token"
+          - "code"
+
+notifier:
+  disable_startup_check: true
+  filesystem:
+    filename: /config/notification.txt

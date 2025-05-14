@@ -1,0 +1,13 @@
+{
+	"type": "object",
+	"description": "Health object",
+	"additionalProperties": false,
+	"required": ["status"],
+	"properties": {
+		"status": {
+			"type": "string",
+			"description": "Healthy",
+			"example": "OK"
+		}
+	}
+}

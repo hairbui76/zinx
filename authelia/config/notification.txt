@@ -1,0 +1,30 @@
+Date: 2025-05-07 10:11:00.995391714 +0000 UTC m=+113.359045683
+Recipient: {Regular User user@example.com}
+Subject: Second Factor Method Added
+Second Factor Method Added
+
+Hi Regular User,
+
+This notification has been sent to you in order to notify you that a Second Factor Method was added to your account.
+
+--------------------------------------------------------------------------------
+
+Event Details:
+
+Action: Second Factor Method Added
+
+
+
+Category: One-Time Password
+
+
+
+--------------------------------------------------------------------------------
+
+This notification was intended for Regular User. This event notification
+was generated due to an action from 127.0.0.1. If you do not believe that
+your actions could have triggered this event or if you are concerned about your
+account's safety, please change your password and reach out to an administrator.
+
+Powered by Authelia https://www.authelia.com
+

@@ -1,0 +1,15 @@
+services:
+  zinx:
+    container_name: zinx
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: always
+    network_mode: host
+    volumes:
+      - "./data:/data"
+    environment:
+      - "TZ=Asia/Ho_Chi_Minh"
+      - "ACME_EMAIL=test@gmail.com"
+      - "INITIAL_ADMIN_PASSWORD=admin"
+      - "INITIAL_ADMIN_EMAIL=admin@example.test"
